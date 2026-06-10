@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: appdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d appdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+
+      DATABASE_URL: postgres://app:app@db:5432/appdb
+
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: app
+      DB_PASSWORD: app
+      DB_NAME: appdb
+
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: app
+      PGPASSWORD: app
+      PGDATABASE: appdb
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
